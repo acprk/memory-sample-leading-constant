@@ -1,0 +1,734 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\Prob}{\mathbb P}
+\newcommand{\ip}[2]{\langle #1,#2\rangle}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\DeclareMathOperator{\Beta}{Beta}
+\DeclareMathOperator{\Law}{Law}
+\newcommand{\B}{\mathrm B}
+\newcommand{\Ores}{P_{\mathrm{res}}}
+
+\title{The leading constant of the memory--sample tradeoff\\ for noiseless Gaussian regression}
+\author{[AUTHOR NAME]}
+\date{Draft, October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A streaming learner reads exact Gaussian linear equations
+\(Y_t=\ip{X_t}{s}\), \(X_t\sim N(0,I_d)\), keeps at most \(M\) bits
+between samples, and must output a unit vector at angular distance at
+most \(\epsilon\) from \(s\). A recent preprint shows that \(M=o(d^2)\)
+forces \(T\ge 2^{-16}d\log_2(1/\epsilon)\) samples. We show that the
+same conclusion holds with \(2^{-16}\) replaced by any constant
+\(c<2\ln 2\approx1.386\), uniformly in \(0<\epsilon\le 1/10\) (in fact with
+\(\log_2(1/\epsilon)\) replaced by the slightly larger \(\log_2(1/\sin\epsilon)\)). We also
+prove that randomized Kaczmarz with fixed-point registers of
+\(\log_2(1/\epsilon)+\tfrac32\log_2 d+\log_2(1/\eta)+O(1)\) bits per coordinate
+succeeds after \((1+\eta)\,d\ln(1/\sin^2\epsilon)\approx(1+\eta)\,2\ln2\cdot d\log_2(1/\epsilon)\) samples, for every signal.
+Hence for memory in the window
+\(d(\log_2(1/\epsilon)+2\log_2 d)\le M=o(d^2)\) the optimal number of
+samples is \((2\ln 2+o(1))\,d\log_2(1/\epsilon)\), and randomized
+Kaczmarz is first-order optimal. The improvement over the
+original proof comes from three local changes: a moving split point in
+its beta-mixture comparison, an exact beta-ratio estimate, and an
+\(\arcsin\) form of the terminal cap bound. We also explain why the original fixed split at \(1/2\)
+cannot give a constant above \(0.5176\), or above \(0.3336\) with the original
+ratio estimates. We record how slowly the bound converges at finite
+\(d\).
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{Model and previous bounds}
+We use the model of the OpenAI preprints~\cite{OAIsub,OAImem}.
+
+\begin{definition}[Finite-state Gaussian stream {\cite[Definition~1.1]{OAIsub}}]\label{def:model}
+Fix integers \(d\ge2\), \(M\ge0\), \(T\ge0\) and \(0<\epsilon\le 1/10\).
+For a signal \(s\in S^{d-1}\) the observations are \(X_t\sim N(0,I_d)\)
+independent and \(Y_t=\ip{X_t}{s}\), \(1\le t\le T\). The learner reads the
+pairs in order. After each sample its persistent state takes at most
+\(2^M\) values. Transitions may depend on the index, on
+\(d,M,T,\epsilon\), on the current state, on the \emph{entire current real pair}
+\((X_t,Y_t)\), and on fresh randomness. Computation inside a
+transition is unrestricted. All information retained for later
+samples must be in the state. The learner stops by time \(T\) and
+outputs \(\widehat s\in S^{d-1}\) as a function of the terminal state,
+the stopping index and fresh randomness. Success means
+\(\arccos\ip{\widehat s}{s}\le\epsilon\).
+Measurability conventions are as in~\cite{OAIsub}.
+\end{definition}
+
+Throughout, \(\lambda=\log_2(1/\epsilon)\ge\log_2 10\). The model
+charges bits of \emph{persistent} state. It does not charge real registers used inside one transition.
+In particular a transition may read the real pair exactly, combine it with the
+stored state in exact arithmetic, and store a rounded result. This is
+how the upper bound in Section~\ref{sec:kaczmarz} uses the model.
+
+The preprint~\cite{OAIsub} proves: if \(M(d)=o(d^2)\), then for all
+large \(d\), every \(0<\epsilon\le1/10\) and every learner whose
+success probability under a uniform signal is at least \(2/3\),
+\(T\ge 2^{-16}d\log_2(1/\epsilon)\) \cite[Theorem~1.2]{OAIsub}. On
+the other side, randomized Kaczmarz~\cite{Kac37,SV09} with real registers satisfies
+\(\E\norm{z_t-s}^2=(1-1/d)^t\) \cite[\S1.2, eq.~(2); source \texttt{introduction.tex}:201--227]{OAImem}. This suggests
+the scale \(d\ln(1/\epsilon^2)=2\ln2\cdot d\lambda\). However, the update stores
+real numbers, and \cite{OAImem} states explicitly that it ``supplies no
+finite-bit upper bound''. Sharan, Sidford and Valiant remark without proof that randomized Kaczmarz
+``can be easily shown'' to reach error \(\epsilon\) with \(O(d\log(1/\epsilon))\) samples and \(O(d\log(1/\epsilon))\) memory
+\cite[\S1.1]{SSV19}. Thus the order \(d\log(1/\epsilon)\) was known
+for \(o(d^2)\) memory up to a factor of about \(2^{16}\cdot 2\ln 2\). Lemma~\ref{lem:kacz} is a written-out version
+of that remark with explicit constants; we claim no novelty for it beyond the constants.
+
+For context: with noisy labels and \(d^2/4\) bits, Sharan, Sidford and
+Valiant~\cite{SSV19} proved an \(\Omega(d\log r)\) lower bound at
+accuracy \(d^{-r}\), and left open whether the \(O(d\log(1/\epsilon))\) samples of randomized Kaczmarz are optimal \cite[\S1.1]{SSV19}. The order
+question in their setting is addressed in~\cite{OAImem}, not here. Related
+memory lower bounds for optimization are in~\cite{MSSV22,BZJ23}. The present
+note does \emph{not} answer the question of~\cite{SSV19}. It sharpens
+\(\Theta(d\log 1/\epsilon)\) to the leading constant \(2\ln 2\) for
+\(o(d^2)\) memory. In this regime randomized Kaczmarz is first-order optimal.
+
+\subsection{Results}
+
+\begin{theorem}[Lower bound with the sharp constant]\label{thm:main}
+Let \(M:\mathbb N\to\mathbb Z_{\ge0}\) satisfy \(M(d)=o(d^2)\), and let
+\(c<2\ln2\). There is \(d_0=d_0(c,M(\cdot))\) such that for every
+\(d\ge d_0\), every \(0<\epsilon\le 1/10\) and every learner of
+Definition~\ref{def:model} with memory \(M(d)\), if \(S\) is uniform on
+\(S^{d-1}\) independently of the rows and the learner's randomness and
+\(\Prob\{\arccos\ip{\widehat s}{S}\le\epsilon\}\ge 2/3\), then
+\[
+ T\ \ge\ c\,d\log_2\frac1{\sin\epsilon}\ \ge\ c\,d\log_2\frac1\epsilon .
+\]
+\end{theorem}
+
+\begin{lemma}[Finite-bit randomized Kaczmarz]\label{lem:kacz}
+Let \(0<\eta\le1\), \(d\ge16/\eta^2\) and \(0<\epsilon\le1/10\). Put
+\[
+ T=\bigl\lceil(1+\eta)\,d\ln(1/\sin^2\epsilon)\bigr\rceil,\qquad
+ q=\Bigl\lceil\log_2\frac1{\sin\epsilon}+\frac32\log_2 d+\log_2\frac{4\sqrt6}{\eta}\Bigr\rceil .
+\]
+There is a learner of Definition~\ref{def:model} with
+\[
+ M=d(q+3)\ \le\ d\Bigl(\lambda+\frac32\log_2 d+\log_2\frac1\eta+7.3\Bigr)
+\]
+bits, horizon \(T\), and a deterministic transition rule (fixed-point
+randomized Kaczmarz). For \emph{every} signal \(s\in S^{d-1}\) it
+satisfies \(\Prob_s\{\arccos\ip{\widehat s}{s}\le\epsilon\}\ge 2/3\).
+Moreover
+\[
+ d\ln\frac1{\sin^2\epsilon}\ \le\ d\ln\frac1{\epsilon^2}+\frac{d\epsilon^2}{2}
+ \ \le\ 1.0011\cdot 2\ln 2\cdot d\lambda .
+\]
+Hence \(T\le(1+\eta)\,1.0011\cdot 2\ln2\cdot d\lambda+1\).
+\end{lemma}
+
+In the form requested by the lower bound, Lemma~\ref{lem:kacz} gives
+\(M\le d(\lambda+C\log_2 d)\) with
+\(C=\tfrac32+(\log_2(1/\eta)+7.3)/\log_2 d\). For example, \(C=2\)
+works once \(d\ge 2^{14.6}\eta^{-2}\). The range \(0<\epsilon\le 1/10\) is
+uniform, and \(d_0=16/\eta^2\) does not depend on \(\epsilon\).
+
+\begin{corollary}[Sharpness window]\label{cor:sharp}
+Let \(M(d)=o(d^2)\), and let \(\epsilon=\epsilon_d\in(0,1/10]\) satisfy
+\(d(\lambda_d+2\log_2 d)\le M(d)\) for all large \(d\). Let
+\(T^*(d)\) be the least horizon for which some learner with memory
+\(M(d)\) reaches accuracy \(\epsilon_d\) with probability \(\ge2/3\) for
+every signal. (The same conclusions hold for the least horizon with success
+probability \(\ge2/3\) under a uniform signal, which lies between the two bounds below.) Then
+\[
+ \lim_{d\to\infty}\frac{T^*(d)}{d\ln(1/\sin^2\epsilon_d)}=1,
+\]
+hence
+\[
+ 2\ln2\le\liminf_{d}\frac{T^*(d)}{d\log_2(1/\epsilon_d)}\le\limsup_d\frac{T^*(d)}{d\log_2(1/\epsilon_d)}\le1.0011\cdot2\ln2,
+\]
+with \(\lim T^*(d)/(d\log_2(1/\epsilon_d))=2\ln2\) whenever \(\epsilon_d\to0\).
+\end{corollary}
+\begin{proof}
+Note \(d\ln(1/\sin^2\epsilon)=2\ln2\cdot d\log_2(1/\sin\epsilon)\).
+For the lower bound, an every-signal guarantee implies the uniform-prior guarantee
+\cite[Corollary~1.3]{OAIsub}, so Theorem~\ref{thm:main} gives
+\(\liminf T^*/(d\ln(1/\sin^2\epsilon_d))\ge c/(2\ln2)\) for every \(c<2\ln 2\).
+For the upper bound, fix \(\eta\in(0,1]\). Once \(\tfrac12\log_2d\ge\log_2(1/\eta)+7.3\) and
+\(d\ge16/\eta^2\), Lemma~\ref{lem:kacz} applies within memory
+\(d(\lambda+2\log_2 d)\le M(d)\), giving \(T^*\le(1+\eta)d\ln(1/\sin^2\epsilon_d)+1\). Let \(\eta\downarrow0\).
+The second display follows from
+\(1\le\ln(1/\sin^2\epsilon)/\ln(1/\epsilon^2)\le1+\epsilon^2/(2\ln(1/\epsilon^2))\le1.0011\) (Lemma~\ref{lem:kacz}).
+\end{proof}
+
+\begin{remark}[Window and the \(\Theta(d^2)\) regime]
+Corollary~\ref{cor:sharp} needs both ends of the window. If
+\(M<d\lambda\), the learner cannot store \(\lambda\) bits per
+coordinate, and our upper bound does not apply. If \(M=Ad^2\) with fixed
+\(A>0\), Theorem~\ref{thm:main} is not available. The proof below then
+yields only a smaller constant: \(c(A)\approx0.47,0.72,0.93,1.19,1.31\)
+for \(A=10^{-2},10^{-3},10^{-4},10^{-6},10^{-8}\)
+(script \texttt{computations/memratio.py}, asymptotic in \(d\); heuristic, since it treats the dimension loss \(2J\) as
+negligible, while for \(M=\Theta(d^2)\) the short-run lemma only gives \(\lambda=O(d)\)). The sharp constant for
+\(\Theta(d^2)\) memory is unknown.
+\end{remark}
+
+\subsection{What is new}
+The overall architecture of the lower bound is that of~\cite{OAIsub}:
+residual subspheres, an \(m\)-th moment to pay for state selection,
+a two-component beta mixture for correlated replica directions,
+backward induction over blocks, and a terminal cap. We change three
+estimates and re-optimize the parameters.
+\begin{enumerate}[label=(\roman*)]
+\item \emph{Moving split} (Lemma~\ref{lem:moving}). The original
+two-component domination splits the beta density at \(q_0=1/2\). This
+costs a factor \(2^{(b-1)/2}\) per replica direction, which is \((\kappa/2)\ln2\)
+nats per unit dimension per block, independently of all parameters. This is at least as large as the
+residual cost \((\kappa/2)\ln\frac1{1-\pi}\) whenever \(\pi\le1/2\), so no choice of parameters removes it. Splitting at \(q_0=1-\delta\)
+with \(\delta\to0\) reduces this cost to \((\kappa/2)\ln\frac1{1-\delta}=O(\kappa\delta)\).
+\item \emph{Beta-ratio bound} (Lemma~\ref{lem:betaratio}). The price of
+the moving split is a factor \(\delta^{-(b-2)/2}\) on the second
+component. It is cancelled by the exact ratio
+\(\B(\alpha,\beta_1)/\B(\alpha,\beta_0)\le((b+j-2)/(D-2))^{\lfloor(b-2)/2\rfloor}\).
+The original proof bounded this ratio by \(1\).
+\item \emph{\(\arcsin\) terminal cap} (Lemma~\ref{lem:cap}). The terminal bound
+improves from \((8\epsilon/r)^{D-1}\) to \(\frac12(\sin\epsilon/r)^{D-1}\). This makes the
+argument uniform down to \(\lambda=\log_2 10\) and removes the separate
+small-\(\lambda\) branch of~\cite{OAIsub}.
+\end{enumerate}
+The original method fails at a definite step. With the split fixed at
+\(1/2\), every choice of parameters gives at most
+\(0.5176\), and at most \(0.3336\) with the original ratio estimates
+(Section~\ref{sec:framework}). The moving split is therefore necessary,
+not a re-tuning. Section~\ref{sec:ledger} records which change
+contributes which factor of the total \(2^{-16}\to1.3847\)
+(certified) improvement, a factor of about \(9.07\times10^4\).
+
+\section{Three estimates}\label{sec:lemmas}
+
+Write \(f_{A,B}\) for the \(\Beta(A,B)\) density and \(\B\) for the beta
+function. Recall that \(\B(A,B)\) decreases in each argument and that
+\(\B(A,B+1)=\B(A,B)\,B/(A+B)\).
+
+\subsection{The terminal cap}
+
+\begin{lemma}[\(\arcsin\) cap]\label{lem:cap}
+Let \(H\) be a Euclidean space of dimension \(D\ge2\), let
+\(w\in H\) and \(0<\rho<1\). Then
+\[
+ \sigma_H\{u\in S(H):\norm{u-w}\le\rho\}\ \le\ \tfrac12\,I_{\rho^2}\Bigl(\tfrac{D-1}{2},\tfrac12\Bigr)\ \le\ \tfrac12\rho^{D-1},
+\]
+where \(I_x(a,b)\) is the regularized incomplete beta function.
+Consequently, on an affine subsphere \(z+rS(H)\) with \(z\perp H\),
+\(\norm z^2+r^2=1\), the angular success probability \(\sigma_H\{u:\arccos\ip{\widehat s}{z+ru}\le\epsilon\}\)
+of any fixed unit output \(\widehat s\), or of any target-independent output law, is
+at most \(\min\{1,\frac12(\sin\epsilon/r)^{D-1}\}\le(\sin\epsilon/r)^p\)
+for every \(0\le p\le D-1\).
+\end{lemma}
+\begin{proof}
+If \(\norm{u-w}\le\rho<1=\norm u\), then
+\(1-2\ip uw+\norm w^2\le\rho^2<1\), so \(\ip uw>\norm w^2/2\ge0\) and
+\(w\ne0\). The distance from \(u\) to the line \(\R w\) is at most
+\(\norm{u-w}\le\rho\). Since \(\ip uw>0\), the angle \(\phi\) between \(u\)
+and \(e=w/\norm w\) is acute with \(\sin\phi\le\rho\), so
+\(\phi\le\theta:=\arcsin\rho\). The cap \(\{\phi\le\theta\}\) with
+\(\theta\le\pi/2\) has mass
+\(\frac12\Prob(1-\ip ue^2\le\rho^2)=\frac12 I_{\rho^2}(\frac{D-1}2,\frac12)\),
+because \(1-\ip ue^2\sim\Beta(\frac{D-1}2,\frac12)\). With \(a=(D-1)/2\)
+and the substitution \(t=\rho^2 s\),
+\[
+ I_{\rho^2}(a,\tfrac12)=\frac{\rho^{2a}}{\B(a,\frac12)}\int_0^1 s^{a-1}(1-\rho^2s)^{-1/2}ds
+ \le\frac{\rho^{2a}}{\B(a,\frac12)}\int_0^1 s^{a-1}(1-s)^{-1/2}ds=\rho^{D-1}.
+\]
+For the consequence: if \(x\in S^{d-1}\) and \(\angle(x,\widehat s)\le\epsilon\), then
+\(\norm{x-\cos\epsilon\,\widehat s}^2=1-2\cos\epsilon\ip x{\widehat s}+\cos^2\epsilon\le\sin^2\epsilon\).
+Apply this to the unit vector \(x=z+ru\) and project onto \(H\) (recall \(z\perp H\)):
+\(\norm{u-w}\le\sin\epsilon/r\) with \(w=\cos\epsilon\,P_H\widehat s/r\). If \(\sin\epsilon/r<1\), apply the
+first part with \(\rho=\sin\epsilon/r\). Otherwise use total
+mass \(1\le(\sin\epsilon/r)^p\). Averaging over an output law independent of the target
+preserves the bound.
+\end{proof}
+This replaces \cite[Lemma~3.1, eq.~(12) and its proof, \texttt{02-subspace-moments.tex}:24--56]{OAIsub}. There
+the successful set was placed in a chordal ball of radius \(\epsilon/r\), recentred at a successful direction (doubling the radius), and then
+bounded by the angular cap \((2\theta)^{D-1}\) with \(\theta\le(\pi/2)\cdot 2\epsilon/r\). This gives
+\((2\pi\epsilon/r)^{D-1}\), rounded to \((8\epsilon/r)^{D-1}\). Using the centre \(\cos\epsilon\,\widehat s\) instead of \(\widehat s\)
+also replaces \(\epsilon\) by \(\sin\epsilon\), which makes the lower bound match the Kaczmarz bound exactly at the level of
+\(d\ln(1/\sin^2\epsilon)\). The worst-case centre
+for a chordal ball is not on the sphere. It is at distance \(\sqrt{1-\rho^2}\) from the origin,
+which is why the exact answer is the \(\arcsin\) cap. This was checked by Monte Carlo
+(\texttt{computations/independent/indep\_cap\_kacz.py}, part f2).
+
+\subsection{The moving split}
+We use the setting of \cite[Lemma~5.1]{OAIsub}. Let \(E\) have dimension \(D'\), let
+\(V\subset E\) have dimension \(1\le j<n<D'\), let \(N\) be uniform among
+the \(n\)-dimensional subspaces of \(E\) containing \(V\), and let \(v\) be uniform
+on \(S(N)\) given \(N\). Put \(b=D'+1-n\ge2\) and
+\[
+ \alpha=\tfrac{n-j}2,\quad \alpha_*=\tfrac{D'-j}2=\alpha+\tfrac{b-1}2,\quad
+ \beta_0=\tfrac j2,\quad \beta_1=\tfrac{D'-n+j-1}2=\beta_0+\tfrac{b-2}2 .
+\]
+Let \(\nu_0=\sigma_E\), and let \(\nu_1\) be the law of
+\(\sqrt{1-Z}\,e_0+\sqrt Z\,u_0\) with \(Z\sim\Beta(\alpha,\alpha_*-\alpha)\),
+\(e_0\sim\sigma_V\), and \(u_0\sim\sigma_{E\cap e_0^\perp}\) given \(e_0\), all independent.
+
+\begin{lemma}[Moving-split domination]\label{lem:moving}
+For every \(0<\delta<1\), as measures on \(S(E)\),
+\[
+ \Law(v)\ \le\ A_\delta\,\nu_0+B_\delta\,\nu_1,\qquad
+ A_\delta=\frac{\B(\alpha_*,\beta_0)}{\B(\alpha,\beta_0)}(1-\delta)^{-\frac{b-1}2}\le(1-\delta)^{-\frac{b-1}2},\quad
+ B_\delta=\frac{\B(\alpha,\beta_1)}{\B(\alpha,\beta_0)}\,\delta^{-\frac{b-2}2}.
+\]
+\end{lemma}
+\begin{proof}
+Let \(Q(y)=\norm{P_{V^\perp}y}^2\). As in the proof of \cite[Lemma~5.1]{OAIsub}
+(\texttt{07-beta-mixture.tex}:50--67), \(Q(v)\sim\Beta(\alpha,\beta_0)\),
+\(Q\sim\Beta(\alpha_*,\beta_0)\) under \(\nu_0\), and \(Q\sim\Beta(\alpha,\beta_1)\)
+under \(\nu_1\). The three laws are invariant under
+\(O(V)\times O(V^\perp)\), and their two component lengths are a.s.\ nonzero. Hence a
+pointwise inequality between the scalar densities of \(Q\) lifts to the vector
+measures (\emph{ibid.}, lines 69--79). Put \(q_0=1-\delta\). For \(q\ge q_0\),
+\[
+ f_{\alpha,\beta_0}(q)=\frac{\B(\alpha_*,\beta_0)}{\B(\alpha,\beta_0)}\,q^{-\frac{b-1}2}f_{\alpha_*,\beta_0}(q)
+ \le A_\delta\,f_{\alpha_*,\beta_0}(q),
+\]
+and \(\B(\alpha_*,\beta_0)\le\B(\alpha,\beta_0)\) since \(\alpha_*>\alpha\). For \(q<q_0\) we have \(1-q>\delta\), so
+\[
+ f_{\alpha,\beta_0}(q)=\frac{\B(\alpha,\beta_1)}{\B(\alpha,\beta_0)}(1-q)^{-\frac{b-2}2}f_{\alpha,\beta_1}(q)
+ \le B_\delta\,f_{\alpha,\beta_1}(q).
+\]
+Hence \(f_{\alpha,\beta_0}\le A_\delta f_{\alpha_*,\beta_0}+B_\delta f_{\alpha,\beta_1}\) on \((0,1)\).
+\end{proof}
+At \(\delta=1/2\) and with \(\B(\alpha,\beta_1)\le\B(\alpha,\beta_0)\) this is the original
+\(\Law(v)\le 2^{(b-1)/2}(\nu_0+\nu_1)\). The statement there is the weaker \(2^{D'}(\nu_0+\nu_1)\).
+Monotonicity of the beta function is the only input, and it holds for every \(q_0\).
+
+\subsection{Beta ratio and inverse moment}
+
+\begin{lemma}[Beta-ratio bound]\label{lem:betaratio}
+For \(\alpha,\beta_0>0\) and \(h\ge0\),
+\(\displaystyle\frac{\B(\alpha,\beta_0+h)}{\B(\alpha,\beta_0)}\le\Bigl(\frac{\beta_0+h}{\alpha+\beta_0+h}\Bigr)^{\lfloor h\rfloor}\).
+In the notation above, \(\alpha+\beta_1=(D-2)/2\) with \(D=D'+1\), so
+\[
+ \frac{\B(\alpha,\beta_1)}{\B(\alpha,\beta_0)}\le\Bigl(\frac{b+j-2}{D-2}\Bigr)^{\lfloor (b-2)/2\rfloor}.
+\]
+\end{lemma}
+\begin{proof}
+\(\B(\alpha,\beta_0+h)\le\B(\alpha,\beta_0+\lfloor h\rfloor)=\B(\alpha,\beta_0)\prod_{i=0}^{\lfloor h\rfloor-1}\frac{\beta_0+i}{\alpha+\beta_0+i}\).
+Each factor is at most \((\beta_0+h)/(\alpha+\beta_0+h)\), since \(x\mapsto x/(\alpha+x)\) increases.
+For the second claim, \(\alpha+\beta_1=\frac{n-j}2+\frac{D'-n+j-1}2=\frac{D'-1}2\) and \(\beta_1=\frac{b+j-2}2\).
+\end{proof}
+
+\begin{lemma}[Inverse moment]\label{lem:invmom}
+If \(Z\sim\Beta(\alpha,h_1)\) and \(\ell<\alpha-1\) is a nonnegative integer, then
+\(\E Z^{-\ell}=\prod_{t=1}^{\ell}\frac{\alpha+h_1-t}{\alpha-t}\le\bigl(\frac{\alpha-1}{\alpha-1-\ell}\bigr)^{h_1}\).
+(The tempting bound \((\alpha/(\alpha-\ell))^{h_1}\) is false for \(h_1=\tfrac12\), e.g.\ \(\alpha=\tfrac52,\ell=1\): \(4/3>\sqrt{5/3}\).)
+\end{lemma}
+\begin{proof}
+The product formula is \cite[eq.~(6)]{OAIsub}. We have
+\(\ln\E Z^{-\ell}=\sum_{t=1}^\ell\ln(1+\frac{h_1}{\alpha-t})\le h_1\sum_{t=1}^\ell\frac1{\alpha-t}\)
+and \(\frac1{\alpha-t}\le\int_{t}^{t+1}\frac{dx}{\alpha-x}\), since the integrand increases on \([t,t+1]\subset[0,\alpha-1)\); summing over \(1\le t\le\ell\) gives \(h_1\ln\frac{\alpha-1}{\alpha-1-\ell}\).
+\end{proof}
+
+\begin{proposition}[One replica direction]\label{prop:dir}
+In the setting of Lemma~\ref{lem:moving}, let \(\ell<\alpha-1\) be an integer, and let
+\(r_1\ge(b+j-2)/(D-2)\) and \(r_2\ge(\alpha-1)/(\alpha-1-\ell)\) with \(r_1<1\le r_2\).
+If \(r_1r_2\le\delta<1\), then
+\[
+ A_\delta+B_\delta\,\E Z^{-\ell}\ \le\ (1-\delta)^{-\frac{b-1}2}+r_2\delta^{-1/2}.
+\]
+\end{proposition}
+\begin{proof}
+By Lemmas~\ref{lem:betaratio} and~\ref{lem:invmom} with \(h_1=(b-1)/2\),
+\(B_\delta\E Z^{-\ell}\le r_1^{\lfloor (b-2)/2\rfloor}\delta^{-(b-2)/2}r_2^{(b-1)/2}\).
+For even \(b\) this equals \((r_1r_2/\delta)^{(b-2)/2}r_2^{1/2}\le r_2^{1/2}\).
+For odd \(b\ge3\) it equals \((r_1r_2/\delta)^{(b-3)/2}\delta^{-1/2}r_2\le r_2\delta^{-1/2}\).
+\end{proof}
+
+The point is the scaling. For a block of \(b\le k=\kappa d\) rows, the first term
+costs \(\frac{\kappa}{2}\ln\frac1{1-\delta}\) nats per unit dimension. The second term
+is \(O(1)\) per direction, hence \(O(1/d)\) per unit dimension, provided \(\delta\) exceeds
+\(r_1r_2\approx(\kappa+\mu)/(1-\pi/(1-\kappa-\mu))\). Since this threshold for \(\delta\) tends to \(0\) with \(\kappa,\mu\), the first term
+is \(o(\kappa)\) as \(\kappa,\mu\to0\), while the main residual cost is of order \(\kappa\pi\).
+
+\section{Proof of Theorem~\ref{thm:main}}\label{sec:proof}
+
+\paragraph{Rate function.} For parameters \(\kappa,\pi,\mu,\zeta>0\) with \(\kappa+\mu+\pi<1\) put
+\[
+ \delta=\frac{(1+\zeta)(\kappa+\mu)}{1-\pi/(1-\kappa-\mu)},\qquad
+ R_1(\kappa,\pi)=\int_0^{\pi/2}\ln\frac{1/2-x}{(1-\kappa)/2-x}\,dx,
+\]
+\[
+ g=R_1(\kappa,\pi)+\frac\kappa2\ln\frac1{1-\delta},\qquad
+ \Phi(\kappa,\pi,\mu,\zeta)=\frac{\kappa\pi\ln2}{g}-\frac{\kappa}{\log_2 10},
+\]
+and call the parameters admissible if moreover \(\delta<1\).
+
+\begin{lemma}\label{lem:sup}
+\(\sup\{\Phi:\text{admissible}\}=2\ln 2\). Explicitly, \(\Phi(10^{-7},10^{-4},10^{-8},10^{-3})\ge1.38470\).
+This was certified with 200-bit interval arithmetic (\texttt{computations/certify.py}) and recomputed independently
+with \texttt{mpmath} quadrature (\texttt{computations/independent/indep\_constant.py}).
+\end{lemma}
+\begin{proof}
+Using \(\ln(1+y)\le y\),
+\(R_1\le\frac\kappa2\int_0^{\pi/2}\frac{dx}{(1-\kappa)/2-x}=\frac\kappa2\ln\frac{1-\kappa}{1-\kappa-\pi}\).
+Take \(\zeta=1\), \(\mu=\kappa^2\), and fix \(\pi\in(0,\frac12)\). As \(\kappa\to0\) we have
+\(\delta=O(\kappa)\), so \(g\le\frac\kappa2[\ln\frac1{1-\pi}+O(\kappa)]\) and
+\(\Phi\ge\frac{2\pi\ln 2}{\ln(1/(1-\pi))}-O(\kappa)\). The right side tends to \(2\ln2\) as
+\(\pi\to0\). Conversely, \(R_1\ge\frac\kappa2\ln\frac1{1-\pi}\) gives \(\Phi<2\pi\ln2/\ln\frac1{1-\pi}<2\ln 2\).
+\end{proof}
+
+\paragraph{Setup.} Write \(\lambda_s=\log_2(1/\sin\epsilon)\). Then \(\lambda\le\lambda_s\le\lambda+0.0025\) and
+\(\lambda_s\ge\log_210\) for \(\epsilon\le1/10\).
+Suppose the theorem fails for some \(c<2\ln2\). Then there is an unbounded
+sequence of dimensions \(d\), accuracies \(\epsilon_d\le1/10\), and learners with memory \(M(d)\) and success \(\ge2/3\) such that
+\(T<cd\lambda_s\le2cd\lambda\). Fix admissible \((\kappa,\pi,\mu,\zeta)\) with \(\Phi>c\) (Lemma~\ref{lem:sup}). By the
+short-run lemma \cite[Lemma~4.2]{OAIsub}, applied with \(2c\) and \(\alpha=2/3\), we have
+\(\lambda=o(d)\), \(T=o(d^2)\), and \(\log_2 w=o(d^2)\) for the padded width \(w=(T+2)2^M\). These bounds
+are uniform in the accuracy and the rules, because \cite[eq.~(18)]{OAIsub} bounds \((d-2)\lambda\) by a
+function of \(d\) and \(M(d)\). Set
+\[
+ k=\lfloor\kappa d\rfloor,\quad m=\lceil\mu d\rceil,\quad \ell=\lfloor\pi d/2\rfloor,\quad p=2\ell,\quad
+ J=\lceil T/k\rceil\le 2c\lambda_s/\kappa+1=o(d),\quad D_{\min}=d-2J .
+\]
+Put \(\alpha_{\min}=(D_{\min}-k-m)/2\), \(r_1=(k+m)/(D_{\min}-2)\) and \(r_2=(\alpha_{\min}-1)/(\alpha_{\min}-1-\ell)\).
+Since \(J=o(d)\), \(r_1\to\kappa+\mu\) and \(r_2\to(1-\pi/(1-\kappa-\mu))^{-1}\), so \(r_1r_2\to\delta/(1+\zeta)<\delta\).
+Hence for all large \(d\) in the sequence:
+\begin{equation}\label{eq:eventual}
+ r_1r_2\le\delta,\qquad p\le D_{\min}-1,\qquad m<D_{\min}-k,\qquad \ell+1<\alpha_{\min}.
+\end{equation}
+Define
+\[
+ \Ores=\prod_{t=1}^{\ell}\frac{D_{\min}/2-t}{(D_{\min}-k)/2-t},\qquad
+ G=w^{1/m}\bigl[(1-\delta)^{-k/2}+r_2\delta^{-1/2}\bigr]\,\Ores .
+\]
+
+\paragraph{Invariant.} Fix a seed as in \cite[Lemma~2.1]{OAIsub}, pad to horizon \(T\)
+\cite[Lemma~4.1]{OAIsub}, and cut the horizon into \(J\) batches of length \(\le k\). For a state \(v\) after \(i\)
+batches let \(h_{i,v}(s)\) be its suffix success. We claim that every affine subsphere \(c_0+rS(H)\) with
+\(\dim H=D\ge d-2i\) satisfies
+\begin{equation}\label{eq:inv}
+ \int h_{i,v}(c_0+ru)\,d\sigma_H(u)\le G^{J-i}(\sin\epsilon/r)^p .
+\end{equation}
+At \(i=J\) this is Lemma~\ref{lem:cap}, since \(D\ge D_{\min}\ge p+1\).
+
+\paragraph{One block.} Assume~\eqref{eq:inv} at \(i+1\). Let the batch have length \(1\le b\le k\) and let \(D\ge d-2i\).
+By \cite[Lemmas~2.4 and~2.5]{OAIsub}, \(\rho^2\sim\Beta((D-b)/2,b/2)\), \(r'=r\rho\), \(E=H\cap e^\perp\), \(D'=D-1\),
+\(n=D-b\). The left side of~\eqref{eq:inv} is at most \(\E_{\rho,e}\E_N\max_{v'}F_{v'}(N)\), where
+\(F_{v'}(N)=\int h_{i+1,v'}(c'+r'u)\,d\sigma_N(u)\). Put \(U_0=G^{J-i-1}(\sin\epsilon/r')^p\). Expand
+\(F_{v'}(N)^m\) over \(m\) conditionally independent directions. For \(j=0\) or \(b=1\) the next direction is
+uniform on \(S(E)\) \cite[Lemma~3.2]{OAIsub}, and its factor is \(\le U_0\). For \(j\ge1\) and \(b\ge2\), apply
+Lemma~\ref{lem:moving}. Under \(\nu_0\) the factor is \(\le U_0\), by the stage-\((i+1)\) bound in dimension
+\(D-1\). Under \(\nu_1\), given \((Z,e_0)\), the target is uniform on an admissible affine subsphere of dimension
+\(D-2\ge d-2(i+1)\) and radius \(r'\sqrt Z\) (\cite{OAIsub}, \texttt{07-beta-mixture.tex}:224--237), so the
+factor is \(\le U_0Z^{-\ell}\). Now \(\alpha=(D-b-j)/2>\alpha_{\min}\) and \((b+j-2)/(D-2)\le r_1\), so by
+Proposition~\ref{prop:dir} and~\eqref{eq:eventual} the conditional factor is at most
+\([(1-\delta)^{-k/2}+r_2\delta^{-1/2}]\,U_0\). Integrating in reverse conditional order, applying Jensen's
+inequality and summing over at most \(w\) states \cite[Lemma~2.5]{OAIsub} gives
+\(\E_N\max_{v'}F_{v'}\le w^{1/m}[(1-\delta)^{-k/2}+r_2\delta^{-1/2}]\,U_0\).
+Finally \(U_0\) contains \(\rho^{-p}\), and
+\(\E\rho^{-p}=\prod_{t=1}^\ell\frac{D/2-t}{(D-b)/2-t}\le\Ores\). Each factor increases in \(b\) and decreases in
+\(D\ge D_{\min}\). This proves~\eqref{eq:inv} at \(i\).
+
+\paragraph{Conclusion.} At \(i=0\) (with \(H=\R^d\), \(r=1\)), averaging over the seed and the initial state as in \cite{OAIsub}
+gives \(2/3\le G^J(\sin\epsilon)^p=G^J2^{-p\lambda_s}\). Since \(J\le T/k+1\),
+\begin{equation}\label{eq:TLB}
+ T\ \ge\ k\Bigl(\frac{p\lambda_s\ln2-\ln(3/2)}{\ln G}-1\Bigr).
+\end{equation}
+We have \(\ln G\le\frac{\ln w}{m}+\frac k2\ln\frac1{1-\delta}+\ln(1+r_2\delta^{-1/2})+\ln\Ores\). Here
+\(\ln w/(md)\to0\), because \(M=o(d^2)\) and \(m\ge\mu d\); this is the only place where \(o(d^2)\) memory enters
+besides the short-run lemma. The factors of \(\Ores\) increase in \(t\), so
+\(\ln\Ores\le\int_0^{\ell+1}\ln\frac{D_{\min}/2-x}{(D_{\min}-k)/2-x}dx=(1+o(1))\,dR_1(\kappa,\pi)\), because \(D_{\min}/d\to1\). Thus
+\(\limsup\ln G/d\le g\). Also \(\ln G\ge\ln\Ores\ge\ell\ln(1+k/d)\), which grows linearly in \(d\). Dividing~\eqref{eq:TLB}
+by \(d\lambda_s\) and using \(\lambda_s\ge\log_210\) gives
+\(\liminf T/(d\lambda_s)\ge\kappa\pi\ln2/g-\kappa/\log_2 10=\Phi>c\). This contradicts \(T<cd\lambda_s\).
+Every eventual condition depends only on \(d\), \(M(d)\) and the fixed parameters, which gives the
+threshold \(d_0(c,M)\). \qed
+
+\begin{remark}
+The small-accuracy branch of \cite{OAIsub} (\(\lambda\le1024\), handled by the full-data bound \(T>d/4\)) is no longer needed.
+With terminal constant \(1\), the induction itself is effective for all \(\lambda_s\ge\log_210\). The \(-\kappa/\log_210\) term in \(\Phi\)
+is the price of this uniformity, and it vanishes as \(\kappa\to0\).
+\end{remark}
+
+\section{Finite-bit Kaczmarz: proof of Lemma~\ref{lem:kacz}}\label{sec:kaczmarz}
+
+\paragraph{The learner.} Let \(\mathcal G_q=2^{-q}\mathbb Z\cap[-3,3]\). Then
+\(|\mathcal G_q|=6\cdot2^q+1\le2^{q+3}\), and the state space is \(\mathcal G_q^d\), so \(M=d(q+3)\) bits suffice.
+Start with \(z_0=0\). On reading the real pair \((x_t,y_t)\) with \(x_t\ne0\), compute in exact arithmetic
+\[
+ \tilde z_t=z_{t-1}+\frac{y_t-\ip{x_t}{z_{t-1}}}{\norm{x_t}^2}x_t ,
+\]
+and store \(z_t=\mathrm{rd}_q(\tilde z_t)\), where \(\mathrm{rd}_q\) rounds each coordinate to the nearest point of \(2^{-q}\mathbb Z\)
+(ties toward \(0\); a Borel rule). On the null event \(x_t=0\) keep \(z_t=z_{t-1}\). After \(T\) samples output
+\(z_T/\norm{z_T}\), or a fixed unit vector if \(z_T=0\). This is a learner of Definition~\ref{def:model}: the real sample is
+used only inside the transition, and only \(z_t\) is retained. We show below that \(\tilde z_t\in[-3,3]^d\), so \(z_t\in\mathcal G_q^d\).
+
+\paragraph{Error recursion.} Fix \(s\in S^{d-1}\) and put \(u_t=x_t/\norm{x_t}\), \(P_t=I-u_tu_t^{\mathsf T}\),
+\(e_t=z_t-s\). Since \(y_t=\ip{x_t}s\) exactly, \(\tilde z_t-s=P_te_{t-1}\). Hence
+\[
+ e_t=P_te_{t-1}+r_t,\qquad \norm{r_t}_\infty\le2^{-q-1},\qquad \norm{r_t}_2\le\delta_q:=\sqrt d\,2^{-q-1}.
+\]
+Let \(\hat e_t=P_t\cdots P_1(-s)\) be the error of exact Kaczmarz on the same rows, and let \(a_t=e_t-\hat e_t\). Then
+\(a_t=P_ta_{t-1}+r_t\), \(a_0=0\), so
+\(a_T=\sum_{t=1}^TP_T\cdots P_{t+1}r_t\). As \(\norm{P_t}\le1\), we get \(\norm{a_t}\le t\delta_q\) deterministically.
+
+\paragraph{Range.} We have \(\norm{e_{t-1}}\le\norm{\hat e_{t-1}}+\norm{a_{t-1}}\le1+T\delta_q\), and so
+\(\norm{\tilde z_t}_\infty\le\norm s+\norm{P_te_{t-1}}\le2+T\delta_q\). We claim \(T\delta_q\le1\). Indeed
+\(T\le(1+\eta)d\Lambda+1\) with \(\Lambda=\ln(1/\sin^2\epsilon)=2\ln2\cdot\lambda'\) and \(\lambda'=\log_2(1/\sin\epsilon)\). Hence
+\(\log_2(T\sqrt d/2)\le\frac32\log_2d+\log_2(2.78\lambda'+1)-1\). Since \(2^{\lambda'+4.29}\ge19.5(1+0.69\lambda')\ge2.78\lambda'+1\), this is
+\(\le\frac32\log_2d+\lambda'+3.29\le q\). So \(\tilde z_t\in[-3,3]^d\), and rounding to the nearest grid point stays in
+\([-3,3]\) because \(\pm3\in\mathcal G_q\).
+
+\paragraph{Exact part: a Beta product.} Let \(\mathcal F_t=\sigma(x_1,\dots,x_t)\). If \(\hat e_{t-1}\ne0\), put
+\(B_t=\ip{u_t}{\hat e_{t-1}/\norm{\hat e_{t-1}}}^2\). Otherwise put \(B_t=\ip{u_t}{e_1}^2\). Since \(u_t\) is uniform and
+independent of \(\mathcal F_{t-1}\), \(B_t\sim\Beta(\frac12,\frac{d-1}2)\) independently of \(\mathcal F_{t-1}\). Hence the \(B_t\)
+are i.i.d., with \(\E B_t=1/d\) and \(\operatorname{Var}B_t=\frac{2(d-1)}{d^2(d+2)}\le\frac2{d^2}\). Also
+\(\norm{\hat e_T}^2=\prod_t(1-B_t)\le\exp(-\sum_tB_t)\).
+Let \(\theta=\eta/4\) and \(L=\Lambda+2\ln\frac1{1-\theta}\). For \(\epsilon\le1/10\) we have \(\Lambda\ge\ln(1/\sin^2 0.1)>4.6\), and
+\(2\ln\frac1{1-\theta}\le\frac{8}{3}\theta=\frac23\eta\), so \(L\le\Lambda(1+\eta/6)\). With
+\(1+\gamma=(1+\eta)/(1+\eta/6)\), so that \(\gamma\ge5\eta/7\), we get \(T/d\ge(1+\gamma)L\). Chebyshev's inequality gives
+\[
+ \Prob\Bigl(\sum_{t\le T}B_t<L\Bigr)\le\frac{2T/d^2}{(T/d)^2\gamma^2/(1+\gamma)^2}
+ =\frac{2(1+1/\gamma)^2}{T}\le\frac{11.52}{\eta^2T}\le\frac{2.51}{\eta^2d}\le\frac16 ,
+\]
+using \((1+1/\gamma)\le2.4/\eta\), \(T\ge4.6d\) and \(d\ge16/\eta^2\). Off this event,
+\(\norm{\hat e_T}\le e^{-L/2}=(1-\theta)\sin\epsilon\).
+
+\paragraph{Rounding part: contraction in \(L^2\).} The vector \(r_t\) is \(\mathcal F_t\)-measurable, and \(u_{t+1},\dots,u_T\) are
+i.i.d.\ uniform and independent of \(\mathcal F_t\). For a fixed \(w\) we have \(\E\norm{P_uw}^2=(1-1/d)\norm w^2\). Iterating,
+\(\E[\norm{P_T\cdots P_{t+1}r_t}^2\mid\mathcal F_t]=(1-1/d)^{T-t}\norm{r_t}^2\). By Minkowski's inequality in \(L^2(\Prob)\),
+\[
+ \bigl(\E\norm{a_T}^2\bigr)^{1/2}\le\sum_{t=1}^T(1-1/d)^{(T-t)/2}\delta_q\le\frac{\delta_q}{1-\sqrt{1-1/d}}\le2d\delta_q=d^{3/2}2^{-q}.
+\]
+By the choice of \(q\), \(2^q\ge4\sqrt6\,d^{3/2}/(\eta\sin\epsilon)\), so \((\E\norm{a_T}^2)^{1/2}\le\theta\sin\epsilon/\sqrt6\). Markov's inequality on
+\(\norm{a_T}^2\) then gives \(\Prob(\norm{a_T}>\theta\sin\epsilon)\le1/6\).
+
+\paragraph{Conclusion.} With probability at least \(1-\frac16-\frac16=\frac23\),
+\(\norm{z_T-s}\le\norm{\hat e_T}+\norm{a_T}\le\sin\epsilon<1\), so \(z_T\ne0\). The
+point \(z_T\) lies in the closed ball of radius \(\sin\epsilon\) about the unit vector \(s\), and every ray from the origin meeting this ball makes
+an angle at most \(\arcsin(\sin\epsilon)=\epsilon\) with \(s\). Hence \(\arccos\ip{z_T/\norm{z_T}}{s}\le\epsilon\). For the bit count,
+\(\log_2(1/\sin\epsilon)\le\lambda+0.0025\) for \(\epsilon\le1/10\) (as \(\sin\epsilon\ge\epsilon(1-\epsilon^2/6)\)). Then
+\(q+3\le\lambda+\frac32\log_2d+\log_2\frac1\eta+\log_2(4\sqrt6)+4.0025\le\lambda+\frac32\log_2d+\log_2\frac1\eta+7.3\).
+Finally, \(0\le\ln\frac1{\sin^2\epsilon}-\ln\frac1{\epsilon^2}=2\ln\frac{\epsilon}{\sin\epsilon}\le-2\ln(1-\epsilon^2/6)\le\epsilon^2/2\), and
+\(\frac{\epsilon^2/2}{\ln(1/\epsilon^2)}\le\frac{0.005}{4.605}<0.0011\). \qed
+
+\begin{remark}[Where the bits go]
+Rounding cost \(\lambda\) bits plus \(\frac32\log_2 d+O(1)\) bits per coordinate: \(\frac12\log_2d\) for
+\(\ell_\infty\to\ell_2\), and \(\log_2 d\) for the effective memory \(\sum_k(1-1/d)^{k/2}\le2d\) of the contraction. The \(L^2\) argument
+avoids a \(\log_2 T\approx\log_2(d\lambda)\) term, which is why \(C\) does not depend on \(\epsilon\). We did not try to
+optimize the \(\frac32\). The \(\lambda\) term cannot be avoided by any learner: the final output takes at most \(2^M\) values (for each fixed
+sample sequence), each successful only for \(\hat s\) in a cap of angular radius \(\epsilon\), whose normalized measure is
+at most \(\frac12(\sin\epsilon)^{d-1}\) by the cap bound used in the terminal lemma; averaging over a uniform \(\hat s\), success
+probability \(\ge2/3\) forces \(2^M\cdot\frac12(\sin\epsilon)^{d-1}\ge\frac23\), i.e.\ \(M\ge(d-1)\lambda'+\log_2\frac43\). (The last column of
+Table~\ref{tab:kacz}, with \(\lceil\lambda'\rceil-3\) fractional bits and no \(\frac32\log_2 d\) term, only illustrates
+that the algorithm fails below this count.)
+\end{remark}
+
+\begin{remark}[Probability estimate]
+Chebyshev's inequality is enough because \(\operatorname{Var}\sum B_t=O(T/d^2)\) while the required deviation is \(\eta T/d\). Bernstein's
+inequality for the bounded variables \(B_t\in[0,1]\), or the exact formulas \(\E\ln\frac1{1-B}=\psi(\frac d2)-\psi(\frac{d-1}2)\) and
+\(\operatorname{Var}\ln\frac1{1-B}=\psi'(\frac{d-1}2)-\psi'(\frac d2)\), would give exponential tails and a threshold
+\(d_0=O(\eta^{-2})\) with a better constant. This is not needed for the first-order statement.
+\end{remark}
+
+\section{Where the constant was lost}\label{sec:ledger}
+
+Table~\ref{tab:ledger} evaluates the lower bound \eqref{eq:TLB}, i.e.\ \(T_{\rm LB}/(d\lambda)\), after each successive correction.
+Rows S1--S5 use the paper's parameters \(k=m=\lfloor d/16\rfloor\), \(\ell=\lfloor d/32\rfloor\) at \(d=4\cdot10^4\), with exact beta products
+(script \texttt{computations/ledger.py}). Row S6 is the parameter limit (Lemma~\ref{lem:sup}).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lp{8.3cm}ll@{}}
+\toprule
+step & change & \(c\) (\(\lambda\to\infty\)) & factor\\
+\midrule
+S0 & paper as printed, \texttt{07-beta-mixture.tex}:117 & \(1.53\times10^{-5}=2^{-16}\) & --\\
+S1 & same displayed bounds, no slack (\(k,p\ge d/16\) not \(d/32\); \(\log_2G=4d\) not \(5d\); \(\lambda-3\approx\lambda\)) & \(9.77\times10^{-4}=2^{-10}\) & \(\times64\)\\
+S2 & exact values of the stated lemma bounds \(2^{D'}(1+\E Z^{-\ell})\), \(\E\rho^{-p}\) & \(3.88\times10^{-3}\) & \(\times4.0\)\\
+S3 & constant the proof actually yields, \(2^{(b-1)/2}(1+\E Z^{-\ell})\) & \(0.1048\) & \(\times27\)\\
+S3b & split at \(1/2\), exact beta ratios & \(0.1195\) & \(\times1.14\)\\
+S4 & moving split \(q_0=1-\delta\), optimized per \(j\) (Lemma~\ref{lem:moving}) & \(0.8704\) & \(\times7.3\)\\
+S5 & terminal cap \(8\to1\) (Lemma~\ref{lem:cap}); at \(\lambda=\log_210\): \(0.0655\to0.8515\) & \(0.8704\) & (\(\times13\) at \(\lambda=\log_2 10\))\\
+S6 & parameters \(\mu\ll\kappa\ll\pi\to0\) (Lemma~\ref{lem:sup}) & \(\to2\ln2=1.3863\) & \(\times1.59\)\\
+ & certified uniform constant at \((10^{-7},10^{-4},10^{-8})\) & \(1.38470\) & total \(\times9.07\cdot10^4\)\\
+\bottomrule
+\end{tabular}
+\caption{Ledger of the constant. The largest single losses are the arithmetic slack (S1, \(\times64\)), the
+statement-versus-proof gap of the mixture lemma (S3, \(\times27\)), and the fixed split (S4, \(\times7.3\)). The terminal
+constant matters only for bounded \(\lambda\), where it decides whether the bound is uniform at all.}
+\label{tab:ledger}
+\end{table}
+
+\subsection{Limit of the original framework}\label{sec:framework}
+Keep the original split \(q_0=1/2\) but free all parameters \((\kappa,\pi,\mu)\) and use terminal constant \(1\). The first
+component of the mixture then costs \(\frac{b-1}2\ln2\) per direction, which is \(\frac\kappa2\ln2\) nats per unit dimension per block.
+This holds whatever the parameters are. With the paper's ratio estimate \(\B(\alpha,\beta_1)\le\B(\alpha,\beta_0)\), the second
+component additionally costs \(\E Z^{-\ell}=e^{(\kappa/2)d\ln\frac1{1-\pi}(1+o(1))}\). As \(\kappa,\mu\to0\) the rate becomes
+\(g_{1/2}=\frac\kappa2[\ln2+2\ln\frac1{1-\pi}]\), and
+\[
+ c_{1/2}=\sup_{0<\pi<1}\frac{2\pi\ln2}{\ln2+2\ln\frac1{1-\pi}}=\frac{\ln2}{u}=0.33357\ldots,\qquad
+ u=-W_{-1}\!\Bigl(-\frac{1}{e\sqrt2}\Bigr)=2.07796\ldots,
+\]
+attained at \(\pi^*=1-1/u=0.51876\). Here \(W_{-1}\) is the lower branch of the Lambert function. The first-order condition
+\(\ln2+2\ln u=2(u-1)\), with \(u=1/(1-\pi)\), gives \(c_{1/2}=\ln2\,(1-\pi^*)\). Numerical optimization over all
+\((\kappa,\pi,\mu)\) in the original framework confirms \(0.333571\) (\texttt{computations/rates.py}, mode \texttt{half}), which is
+\(4.16\) times below \(2\ln 2\). With the exact beta ratio but still \(q_0=1/2\), the second component becomes
+\(O(1)\), but the first does not. This gives
+\(\sup_\pi 2\pi\ln2/\ln\frac2{1-\pi}=2\ln2/u'=0.51759\) with \(u'=-W_{-1}(-1/(2e))=2.67835\). Either way the cap is a
+fixed fraction of \(2\ln 2\), so the split point must move to \(1\).
+
+\section{Finite \texorpdfstring{\(d\)}{d}}\label{sec:finite}
+The convergence in Theorem~\ref{thm:main} is slow. The constant approaches \(2\ln 2\) only when
+\(\mu\ll\kappa\ll\pi\to0\). The integrality requirements \(k,m\ge2\) alone need \(d\ge2/\mu\). The memory term
+\(\ln w/m\) must also be small compared with \(d\,g\approx\frac{\kappa}{2}\pi d\), i.e.\ \(M/d^2\ll\mu\kappa\pi\). Table~\ref{tab:finite}
+reports the effective constant \(T_{\rm LB}/(d\lambda)\) from~\eqref{eq:TLB} with exact beta products, worst test
+dimension \(D_{\min}\), \(\lambda=10\), and Kaczmarz memory \(M=d(\lambda+2\log_2 d)\), maximized over a parameter grid.
+These are estimates and not certificates: the block maximum is evaluated at \(b\in\{k-1,k\}\) and \(j\in\{1,m/2,m-1\}\).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\(d\) & \(10^4\) & \(10^6\) & \(10^8\) & \(10^{10}\)\\
+\midrule
+best value found (estimate, not a certificate) & 0.341 & 0.779 & 1.071 & 1.231\\
+\bottomrule
+\end{tabular}
+\caption{Effective lower-bound constant at finite \(d\), \(\lambda=10\), memory \(d(\lambda+2\log_2d)\) (compare \(2\ln2=1.386\) and the original \(2^{-16}\)).
+Each entry is the maximum over the union of two parameter grids (\texttt{computations/independent/indep\_constant.py}, \(\kappa\le0.03,\pi\le0.2\);
+\texttt{computations/finite\_d\_fine.py}, \(\kappa\le0.3,\pi\le0.7\)); the \(10^8\) entry comes from the first grid, the others from the second.
+Optimizers: \((0.076,0.48,0.13)\), \((0.038,0.33,0.024)\), \((0.01,0.2,0.01)\), \((0.0024,0.10,0.0019)\). Since the block maximum is
+evaluated only at \(b\in\{k-1,k\}\), \(j\in\{1,m/2,m-1\}\), these numbers are estimates of what the proof gives, not proved bounds.}
+\label{tab:finite}
+\end{table}
+
+So at \(d=10^4\) the improved proof gives about \(0.34\) (about \(2.2\cdot10^4\) times the original \(2^{-16}\)), which is still a factor \(4\) below
+Kaczmarz's \(1.386\). Even at \(d=10^{10}\) the gap is \(11\%\). The statement
+``Kaczmarz is first-order optimal'' is asymptotic. The rate at which the effective constant approaches \(2\ln2\) is
+not optimized here.
+
+\section{Numerical unit test of Lemma~\ref{lem:kacz}}
+Script \texttt{computations/kacz\_fixedpoint.py} runs exactly the learner of Section~\ref{sec:kaczmarz}, with float64 standing in for
+exact arithmetic. The rounding resolution is \(2^{-q}\ge2^{-35}\), far above the float64 error. It uses \(200\) independent
+signals per row and \(\eta=1/4\). The lemma's sufficient condition \(d\ge16/\eta^2=256\) fails at \(d=200\). Those rows test the
+algorithm, not the lemma's Chebyshev constant.
+
+\begin{table}[h]
+\centering\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}rrrrrccccccc@{}}
+\toprule
+\(d\) & \(\epsilon\) & \(q\) & \(M/d\) & \(T\) & succ.\ fix/real & rms\(\norm{a_T}\) & bound & \(\hat\Prob(\sum B<L)\) & \(\max\norm{\tilde z}_\infty\) & 1st hit & succ.\ \(q_{\rm low}\)\\
+\midrule
+200 & 0.1 & 21 & 24 & 1153 & 1.000/1.000 & \(2.7\cdot10^{-5}\) & \(1.3\cdot10^{-3}\) & 0.000 & 0.310 & 1.0307 & 0.000 (\(q=1\))\\
+200 & 0.001 & 27 & 30 & 3454 & 1.000/1.000 & \(4.3\cdot10^{-7}\) & \(2.1\cdot10^{-5}\) & 0.000 & 0.312 & 0.9953 & 0.000 (\(q=7\))\\
+200 & 1e-05 & 34 & 37 & 5757 & 1.000/1.000 & \(3.4\cdot10^{-9}\) & \(1.6\cdot10^{-7}\) & 0.000 & 0.303 & 0.9989 & 0.000 (\(q=14\))\\
+400 & 0.1 & 22 & 25 & 2305 & 1.000/1.000 & \(2.8\cdot10^{-5}\) & \(1.9\cdot10^{-3}\) & 0.000 & 0.206 & 1.0036 & 0.000 (\(q=1\))\\
+400 & 0.001 & 29 & 32 & 6908 & 1.000/1.000 & \(2.2\cdot10^{-7}\) & \(1.5\cdot10^{-5}\) & 0.000 & 0.216 & 1.0043 & 0.000 (\(q=7\))\\
+400 & 0.0001 & 32 & 35 & 9211 & 1.000/1.000 & \(2.7\cdot10^{-8}\) & \(1.9\cdot10^{-6}\) & 0.000 & 0.236 & 1.0043 & 0.000 (\(q=11\))\\
+1000 & 0.1 & 24 & 27 & 5761 & 1.000/1.000 & \(1.7\cdot10^{-5}\) & \(1.9\cdot10^{-3}\) & 0.000 & 0.150 & 0.9982 & 0.000 (\(q=1\))\\
+1000 & 0.001 & 31 & 34 & 17270 & 1.000/1.000 & \(1.3\cdot10^{-7}\) & \(1.5\cdot10^{-5}\) & 0.000 & 0.152 & 1.0025 & 0.000 (\(q=7\))\\
+\bottomrule
+\end{tabular}}
+\caption{Fixed-point Kaczmarz at the lemma's \(T\) and \(q\). Columns: success rate (fixed point / real
+registers); root-mean-square rounding accumulation \(\norm{a_T}\) versus the proved \(L^2\) bound \(d^{3/2}2^{-q}\);
+empirical \(\Prob(\sum B_t<L)\); \(\max\norm{\tilde z_t}_\infty\) (the proof needs \(\le3\)); median first time with angular error \(\le\epsilon\),
+divided by \(d\ln(1/\sin^2\epsilon)\) (checked every \(50\) steps, so the resolution is \(50/(d\ln(1/\sin^2\epsilon))\le4\%\)); success with only \(\lceil\lambda'\rceil-3\) fractional bits.}
+\label{tab:kacz}
+\end{table}
+
+All rows succeed with frequency \(1.000\ge2/3\). The rounding term stays \(47\)--\(115\) times below its proved bound, and
+\(\norm{\tilde z_t}_\infty\le0.32\). The first hitting time is \((1.00\pm0.03)\,d\ln(1/\sin^2\epsilon)\), which matches the first-order
+constant. With \(\lambda-3\) fractional bits the algorithm never succeeds. The unit test does not probe the optimality of
+the \(\frac32\log_2d\) term.
+
+\appendix
+\section{Line-by-line changes to the original proof}\label{app:changes}
+File references are to the \LaTeX{} sources of~\cite{OAIsub} (\texttt{preprints/Subsphere-methods-\ldots/build/}).
+\begin{enumerate}[label=C\arabic*.,leftmargin=2.2em]
+\item \texttt{main.tex}:13--14 and \texttt{sections/00-introduction.tex}:53--67, 85--88: replace \(2^{-16}\) by
+``any \(c<2\ln2\), with threshold \(d_0(c,M)\)''.
+\item \texttt{02-subspace-moments.tex}:24--30, 44--56 (eq.~\texttt{s:affine-terminal}): replace
+\(\min\{1,(8\epsilon/R)^{D-1}\}\) by \(\min\{1,\frac12(\sin\epsilon/R)^{D-1}\}\), using Lemma~\ref{lem:cap}: centre the chordal ball at
+\(\cos\epsilon\,\widehat s\) (radius \(\sin\epsilon\)), do not recentre at a successful
+direction, and use the \(\arcsin\) cap.
+\item \texttt{07-beta-mixture.tex}:21--48 (Lemma \texttt{s:mixture}): replace \(\Law(v)\le2^{D'}(\nu_0+\nu_1)\) by Lemma~\ref{lem:moving}
+with a free \(\delta\in(0,1)\). Proof lines 86--106: split at \(q_0=1-\delta\) and keep the beta ratios.
+\item \texttt{07-beta-mixture.tex}:115--118: \(c_*=2^{-16}\) becomes the given \(c<2\ln2\). Choose admissible
+\((\kappa,\pi,\mu,\zeta)\) with \(\Phi>c\) (Lemma~\ref{lem:sup}).
+\item \texttt{07-beta-mixture.tex}:121--132: keep the short-run reduction with this \(c\). Delete the branch
+\(\lambda\le1024\) (lines 130--132) and with it the use of \texttt{03-stopping.tex}:123--135.
+\item \texttt{07-beta-mixture.tex}:134--141: parameters \(k=\lfloor\kappa d\rfloor\), \(m=\lceil\mu d\rceil\),
+\(\ell=\lfloor\pi d/2\rfloor\), and \(G=w^{1/m}[(1-\delta)^{-k/2}+r_2\delta^{-1/2}]\Ores\) instead of \(2^{4d}w^{1/m}\).
+\item \texttt{07-beta-mixture.tex}:149--153: budget \(J\le2c\lambda_s/\kappa+1=o(d)\), and the eventual
+conditions~\eqref{eq:eventual} replace \(J\le d/8\), \(m,p\ge d/32\).
+\item \texttt{07-beta-mixture.tex}:166--168: invariant \((8\epsilon/r)^p\to(\sin\epsilon/r)^p\). Lines 176--179: base case via
+Lemma~\ref{lem:cap}.
+\item \texttt{07-beta-mixture.tex}:216: replace \(D\ge3d/4\), \(n\ge11d/16\) by \(D\ge D_{\min}\), \(n-j\ge D_{\min}-k-m\).
+\item \texttt{07-beta-mixture.tex}:239--257: replace eq.~\texttt{(s:mixture-inverse)} (\(\E Z^{-\ell}\le2^d\)) and
+\(2^dU_0(1+\E Z^{-\ell})\le2^{3d}U_0\) by Lemma~\ref{lem:invmom} and Proposition~\ref{prop:dir}:
+conditional factor \(\le[(1-\delta)^{-k/2}+r_2\delta^{-1/2}]U_0\).
+\item \texttt{07-beta-mixture.tex}:262--269: \((2^{3d}U_0)^m\to([(1-\delta)^{-k/2}+r_2\delta^{-1/2}]U_0)^m\).
+\item \texttt{07-beta-mixture.tex}:271--281: residual moment \(2^\ell\le2^d\) replaced by \(\Ores=e^{(R_1(\kappa,\pi)+o(1))d}\).
+This uses monotonicity in \(b\) and \(D\).
+\item \texttt{07-beta-mixture.tex}:283--299: replace the arithmetic~\texttt{(s:numeric-arithmetic)} by~\eqref{eq:TLB} and the
+limit argument of Section~\ref{sec:proof}.
+\item \texttt{07-beta-mixture.tex}:296--298 (side remark): the displayed chain uses \(p\ge d/32\) and \(J\le32c_*\lambda+1\). Both are
+looser than needed (\(p\approx d/16\), \(k\approx d/16\)). This is row S1 of Table~\ref{tab:ledger}, and it is not an error.
+\end{enumerate}
+No step of the original proof was found to be wrong. All changes are sharpenings. The measurability, padding,
+Borel-version and short-run arguments (\texttt{01-residual-spheres.tex}, \texttt{03-stopping.tex}:13--88) are used verbatim.
+
+\section{Reproducibility}
+Scripts (Python 3, \texttt{numpy}, \texttt{scipy}, \texttt{mpmath}) are in the directory \texttt{computations/} of the
+accompanying repository; \texttt{computations/run\_all.sh} runs all of them:
+\texttt{ledger.py} (Table~\ref{tab:ledger}),
+\texttt{rates.py} (rate functions; framework limit~\(0.333571\)),
+\texttt{certify.py} (interval certificate \(1.38470\)),
+\texttt{checks.py} and \texttt{independent/indep\_mixture.py} (Monte Carlo of the beta laws, pointwise domination of
+Lemma~\ref{lem:moving} on grids including \(q_0\to1\)),
+\texttt{inverse\_moment\_check.py} (Lemma~\ref{lem:invmom}, including the counterexample to the tempting bound),
+\texttt{independent/indep\_cap\_kacz.py} (Lemma~\ref{lem:cap} for \(D=2,\dots,399\)),
+\texttt{independent/indep\_constant.py}, \texttt{finite\_d\_fine.py} (Table~\ref{tab:finite}),
+\texttt{finite\_d\_fullscan.py} (full scan over all \((b,j)\) at the optimizers for \(d=10^4,10^6\); it gives the same block maximum as the sampled points),
+\texttt{memratio.py} (\(\Theta(d^2)\) remark), and
+\texttt{kacz\_fixedpoint.py} (Table~\ref{tab:kacz}).
+The scripts in \texttt{computations/independent/} are separate re-implementations that do not import the others.
+
+\section*{Acknowledgement and provenance}
+The results in this note were found and checked by Claude (Anthropic) agents working under the direction of
+[AUTHOR NAME]. The note has had no human peer review, and nothing in it is formalized in a proof assistant. The underlying architecture and all unchanged lemmas are from the OpenAI
+preprint~\cite{OAIsub}.
+
+\begin{thebibliography}{99}
+\bibitem{OAIsub} OpenAI. \emph{Subsphere methods for memory--sample lower bounds in noiseless Gaussian regression.}
+OpenAI Math Release preprint, September 27, 2026. \url{https://github.com/openai/math}
+\bibitem{OAImem} OpenAI. \emph{Memory and precision in noiseless Gaussian regression.}
+OpenAI Math Release preprint, September 27, 2026. \url{https://github.com/openai/math}
+\bibitem{SSV19} V.~Sharan, A.~Sidford, G.~Valiant. Memory-sample tradeoffs for linear regression with small error.
+\emph{STOC 2019}, 890--901. doi:10.1145/3313276.3316403, arXiv:1904.08544.
+\bibitem{MSSV22} A.~Marsden, V.~Sharan, A.~Sidford, G.~Valiant. Efficient convex optimization requires superlinear memory.
+\emph{COLT 2022}, PMLR 178:2390--2430.
+\bibitem{BZJ23} M.~Blanchard, J.~Zhang, P.~Jaillet. Quadratic memory is necessary for optimal query complexity in convex
+optimization: center-of-mass is Pareto-optimal. \emph{COLT 2023}, PMLR 195:4696--4736.
+\bibitem{Kac37} S.~Kaczmarz. Angen\"aherte Aufl\"osung von Systemen linearer Gleichungen.
+\emph{Bull.\ Int.\ Acad.\ Polon.\ Sci.\ Lett.\ A} 35 (1937), 355--357.
+\bibitem{SV09} T.~Strohmer, R.~Vershynin. A randomized Kaczmarz algorithm with exponential convergence.
+\emph{J.\ Fourier Anal.\ Appl.} 15(2) (2009), 262--278.
+\end{thebibliography}
+\end{document}

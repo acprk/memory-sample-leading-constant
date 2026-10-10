@@ -1,0 +1,22 @@
+2ln2 = 1.3862943611198906
+paper params (1/16,1/16,1/16), lam->inf:
+  paper c_inf = 0.003882   c(lam0) = -0.014932
+  half  c_inf = 0.104527   c(lam0) = 0.085712
+  opt   c_inf = 0.870859   c(lam0) = 0.852045
+residual-only bound kappa*pi*ln2/R1 at (1/16,1/16): 1.2986872586992417
+framework optimum mode=paper lam=   3.322: c=0.033450  (kappa,pi,mu)=[0.19829877 0.69486067 0.10684057]
+framework optimum mode=paper lam=      10: c=0.081868  (kappa,pi,mu)=[0.36114823 0.53869558 0.10015619]
+framework optimum mode=paper lam=   1e+12: c=0.107751  (kappa,pi,mu)=[0.43720127 0.36703496 0.19576376]
+framework optimum mode=half  lam=   3.322: c=0.333571  (kappa,pi,mu)=[1.00040094e-08 5.18759590e-01 1.00000012e-08]
+framework optimum mode=half  lam=      10: c=0.333571  (kappa,pi,mu)=[1.00000009e-08 5.18758973e-01 1.00001729e-08]
+framework optimum mode=half  lam=   1e+12: c=0.333571  (kappa,pi,mu)=[1.00000294e-08 5.18759021e-01 1.00000969e-08]
+framework optimum mode=opt   lam=   3.322: c=1.386163  (kappa,pi,mu)=[1.00000004e-08 9.57161147e-05 1.03858763e-08]
+framework optimum mode=opt   lam=      10: c=1.386163  (kappa,pi,mu)=[1.00000004e-08 9.57161147e-05 1.03858763e-08]
+framework optimum mode=opt   lam=   1e+12: c=1.386163  (kappa,pi,mu)=[1.00000004e-08 9.57161147e-05 1.03858763e-08]
+
+moving split, hierarchy mu<<kappa<<pi -> 2ln2 (lam=log2 10, i.e. uniform constant):
+  kappa=0.01 pi=0.05 mu=0.001: c_inf=1.242584  c(lam0)=1.239574  [2ln2*pi/(-ln(1-pi))=1.351341]
+  kappa=0.001 pi=0.02 mu=0.0001: c_inf=1.344631  c(lam0)=1.344330  [2ln2*pi/(-ln(1-pi))=1.372385]
+  kappa=0.0001 pi=0.005 mu=1e-05: c_inf=1.371816  c(lam0)=1.371786  [2ln2*pi/(-ln(1-pi))=1.382826]
+  kappa=1e-05 pi=0.001 mu=1e-06: c_inf=1.380104  c(lam0)=1.380101  [2ln2*pi/(-ln(1-pi))=1.385601]
+  kappa=1e-06 pi=0.0002 mu=1e-07: c_inf=1.383405  c(lam0)=1.383405  [2ln2*pi/(-ln(1-pi))=1.386156]

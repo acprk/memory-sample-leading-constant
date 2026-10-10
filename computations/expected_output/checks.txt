@@ -1,0 +1,10 @@
+(a) KS actual Q vs Beta(alpha,beta0): p = 0.33028949173963595
+(a) KS nu1   Q vs Beta(alpha,beta1): p = 0.7808154430370128
+(b) max_q [ln f_v - ln(dominating density)] over cases = -2.4179324171313965e-05 (must be <= ~0)
+(c) terminal cap violations of  mass <= delta^p : 0
+(d) Kaczmarz d=100 eps=0.1: T=368 (0.8 x d ln(1/eps^2)) success=0.007
+(d) Kaczmarz d=100 eps=0.1: T=414 (0.9 x d ln(1/eps^2)) success=0.090
+(d) Kaczmarz d=100 eps=0.1: T=460 (1.0 x d ln(1/eps^2)) success=0.603
+(d) Kaczmarz d=100 eps=0.1: T=506 (1.1 x d ln(1/eps^2)) success=0.960
+(d) Kaczmarz d=100 eps=0.1: T=552 (1.2 x d ln(1/eps^2)) success=1.000
+(e) E Z^{-l}: MC 2.4336790649950517  formula 2.4320190368682666

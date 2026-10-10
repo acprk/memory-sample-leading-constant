@@ -1,0 +1,23 @@
+(f1) max ln(cap/rho^{D-1}) = -0.6931471805599453 at (2, np.float64(1.0)) (<= -ln2 expected)
+(f2) D=3 rho=0.3: sup_t MC=0.02314 (t*=0.942, sqrt(1-rho^2)=0.954) arcsin-cap=0.02303  rho^(D-1)=0.09000
+(f2) D=3 rho=0.7: sup_t MC=0.14373 (t*=0.711, sqrt(1-rho^2)=0.714) arcsin-cap=0.14293  rho^(D-1)=0.49000
+(f2) D=3 rho=0.95: sup_t MC=0.34531 (t*=0.314, sqrt(1-rho^2)=0.312) arcsin-cap=0.34388  rho^(D-1)=0.90250
+(f2) D=5 rho=0.3: sup_t MC=0.00153 (t*=0.942, sqrt(1-rho^2)=0.954) arcsin-cap=0.00157  rho^(D-1)=0.00810
+(f2) D=5 rho=0.7: sup_t MC=0.05525 (t*=0.711, sqrt(1-rho^2)=0.714) arcsin-cap=0.05545  rho^(D-1)=0.24010
+(f2) D=5 rho=0.95: sup_t MC=0.27366 (t*=0.314, sqrt(1-rho^2)=0.312) arcsin-cap=0.27342  rho^(D-1)=0.81451
+(f2) D=8 rho=0.3: sup_t MC=0.00004 (t*=0.942, sqrt(1-rho^2)=0.954) arcsin-cap=0.00003  rho^(D-1)=0.00022
+(f2) D=8 rho=0.7: sup_t MC=0.01534 (t*=0.711, sqrt(1-rho^2)=0.714) arcsin-cap=0.01534  rho^(D-1)=0.08235
+(f2) D=8 rho=0.95: sup_t MC=0.20603 (t*=0.314, sqrt(1-rho^2)=0.312) arcsin-cap=0.20667  rho^(D-1)=0.69834
+d=10: d*E ln(1-B) = -1.172467, d*ln(1-1/d)=-1.053605
+d=100: d*E ln(1-B) = -1.015202, d*ln(1-1/d)=-1.005034
+d=1000: d*E ln(1-B) = -1.001502, d*ln(1-1/d)=-1.000500
+d=10000: d*E ln(1-B) = -1.000150, d*ln(1-1/d)=-1.000050
+Kaczmarz d=200 eps=0.1 qbits=None: first-hit T(2/3-quantile)/(d ln eps^-2)=1.0271, median ratio=1.0027
+Kaczmarz d=200 eps=0.1 qbits=15: first-hit T(2/3-quantile)/(d ln eps^-2)=1.0123, median ratio=0.9994
+Kaczmarz d=200 eps=0.1 qbits=2: first-hit T(2/3-quantile)/(d ln eps^-2)=nan, median ratio=inf
+Kaczmarz d=200 eps=0.001 qbits=None: first-hit T(2/3-quantile)/(d ln eps^-2)=0.9989, median ratio=0.9884
+Kaczmarz d=200 eps=0.001 qbits=22: first-hit T(2/3-quantile)/(d ln eps^-2)=1.0004, median ratio=0.9963
+Kaczmarz d=200 eps=0.001 qbits=8: first-hit T(2/3-quantile)/(d ln eps^-2)=nan, median ratio=inf
+Kaczmarz d=400 eps=0.0001 qbits=None: first-hit T(2/3-quantile)/(d ln eps^-2)=1.0011, median ratio=0.9969
+Kaczmarz d=400 eps=0.0001 qbits=26: first-hit T(2/3-quantile)/(d ln eps^-2)=1.0098, median ratio=0.9949
+Kaczmarz d=400 eps=0.0001 qbits=12: first-hit T(2/3-quantile)/(d ln eps^-2)=nan, median ratio=inf

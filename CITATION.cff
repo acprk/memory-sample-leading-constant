@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+message: >-
+  If you use this note or its computations, please cite it as below.
+  Please also cite the OpenAI preprints listed in UPSTREAM.md.
+type: software
+title: 'The leading constant of the memory-sample tradeoff for noiseless Gaussian regression'
+version: 0.1.0
+date-released: '2026-10-10'
+authors:
+  - name: '[AUTHOR NAME]'
+license: Apache-2.0
+abstract: >-
+  OpenAI's preprint on subsphere methods shows that a streaming learner with
+  o(d^2) bits of memory needs T >= 2^-16 d log2(1/eps) noiseless Gaussian
+  samples to recover a unit signal within angle eps. The note shows that the
+  constant 2^-16 can be replaced by any c < 2 ln 2, uniformly in
+  0 < eps <= 1/10, and that randomized Kaczmarz with fixed-point registers
+  matches this constant. In the window d(log2(1/eps) + 2 log2 d) <= M = o(d^2)
+  the optimal sample count is therefore (2 ln 2 + o(1)) d log2(1/eps). The
+  improvement (about 9.07e4) comes from a moving split point in the
+  beta-mixture comparison, an exact beta-ratio bound and an arcsin terminal
+  cap; with the original fixed split no parameter choice exceeds 0.5176. The
+  statements are asymptotic in d and converge slowly; the sharp constant for
+  Theta(d^2) memory is unknown. Conditional on the correctness of the upstream
+  preprint. Found and checked by Claude (Anthropic) agents under the repository
+  owner's direction. No human peer review has taken place and nothing is
+  formalized in Lean.
+keywords:
+  - memory-sample tradeoffs
+  - streaming lower bounds
+  - linear regression
+  - randomized Kaczmarz
+  - explicit constants
+references:
+  - type: article
+    title: 'Subsphere methods for memory-sample lower bounds in noiseless Gaussian regression'
+    authors:
+      - name: OpenAI
+    repository-code: 'https://github.com/openai/math'
+    commit: fd4aeeb2ee4fc729c18d98444fed42fd0529eeeb
+  - type: article
+    title: 'Memory and precision in noiseless Gaussian regression'
+    authors:
+      - name: OpenAI
+    repository-code: 'https://github.com/openai/math'
+    commit: fd4aeeb2ee4fc729c18d98444fed42fd0529eeeb

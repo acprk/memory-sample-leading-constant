@@ -1,0 +1,35 @@
+d=40000  k=m=2500  l=1250
+S0 paper literal: c=2^-16 = 1.52587890625e-05
+S1 same bounds, no slack (k,p=d/16 not d/32; log2G=4d not 5d; lam-3~lam; lam->inf): c=9.766e-04 = 2^-10.00
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=8  lam=     3.322  log2G/d=1.00620  c=-1.8438e-02
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=8  lam=        10  log2G/d=1.00620  c=-3.5326e-03
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=8  lam=      1000  log2G/d=1.00620  c= 3.8080e-03
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=8  lam=     1e+09  log2G/d=1.00620  c= 3.8822e-03
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=1  lam=     3.322  log2G/d=1.00620  c=-1.4932e-02
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=1  lam=        10  log2G/d=1.00620  c=-2.3679e-03
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=1  lam=      1000  log2G/d=1.00620  c= 3.8197e-03
+S2 exact value of paper-lemma bounds 2^{D'}(1+EZ^-l), worst j  C=1  lam=     1e+09  log2G/d=1.00620  c= 3.8822e-03
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=8  lam=     3.322  log2G/d=0.03727  c=-8.6660e-03
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=8  lam=        10  log2G/d=0.03727  c= 6.7104e-02
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=8  lam=      1000  log2G/d=0.03727  c= 1.0442e-01
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=8  lam=     1e+09  log2G/d=0.03727  c= 1.0480e-01
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=1  lam=     3.322  log2G/d=0.03727  c= 8.5974e-02
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=1  lam=        10  log2G/d=0.03727  c= 9.8543e-02
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=1  lam=      1000  log2G/d=0.03727  c= 1.0473e-01
+S3 proof constant 2^{(b-1)/2}(1+EZ^-l), all j                  C=1  lam=     1e+09  log2G/d=0.03727  c= 1.0480e-01
+S3b split at 1/2 with exact Beta ratios                        C=8  lam=     3.322  log2G/d=0.03269  c=-7.2413e-03
+S3b split at 1/2 with exact Beta ratios                        C=8  lam=        10  log2G/d=0.03269  c= 7.7402e-02
+S3b split at 1/2 with exact Beta ratios                        C=8  lam=      1000  log2G/d=0.03269  c= 1.1909e-01
+S3b split at 1/2 with exact Beta ratios                        C=8  lam=     1e+09  log2G/d=0.03269  c= 1.1951e-01
+S3b split at 1/2 with exact Beta ratios                        C=1  lam=     3.322  log2G/d=0.03269  c= 1.0068e-01
+S3b split at 1/2 with exact Beta ratios                        C=1  lam=        10  log2G/d=0.03269  c= 1.1325e-01
+S3b split at 1/2 with exact Beta ratios                        C=1  lam=      1000  log2G/d=0.03269  c= 1.1944e-01
+S3b split at 1/2 with exact Beta ratios                        C=1  lam=     1e+09  log2G/d=0.03269  c= 1.1951e-01
+S4 moving split q0 (optimised per j)                           C=8  lam=     3.322  log2G/d=0.00449  c= 6.5473e-02
+S4 moving split q0 (optimised per j)                           C=8  lam=        10  log2G/d=0.00449  c= 6.0300e-01
+S4 moving split q0 (optimised per j)                           C=8  lam=      1000  log2G/d=0.00449  c= 8.6771e-01
+S4 moving split q0 (optimised per j)                           C=8  lam=     1e+09  log2G/d=0.00449  c= 8.7038e-01
+S4 moving split q0 (optimised per j)                           C=1  lam=     3.322  log2G/d=0.00449  c= 8.5151e-01
+S4 moving split q0 (optimised per j)                           C=1  lam=        10  log2G/d=0.00449  c= 8.6411e-01
+S4 moving split q0 (optimised per j)                           C=1  lam=      1000  log2G/d=0.00449  c= 8.7032e-01
+S4 moving split q0 (optimised per j)                           C=1  lam=     1e+09  log2G/d=0.00449  c= 8.7038e-01

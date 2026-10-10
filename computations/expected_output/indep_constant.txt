@@ -1,0 +1,21 @@
+2ln2 = 1.38629436112
+('1/16', '1/16', '1/16') c_inf= 0.4097526385  c(lambda=log2 10)= 0.3909382638  ratio to 2^-16: 25620.5  loss 1-c/2ln2 = 0.7044   (kappa+mu)/pi= 2.0  pi/2= 0.03125
+('1e-3', '2e-2', '1e-4') c_inf= 1.299418693  c(lambda=log2 10)= 1.299117663  ratio to 2^-16: 85139.0  loss 1-c/2ln2 = 0.06267   (kappa+mu)/pi= 0.055  pi/2= 0.01
+('1e-5', '1e-3', '1e-6') c_inf= 1.370496075  c(lambda=log2 10)= 1.370493065  ratio to 2^-16: 89816.6  loss 1-c/2ln2 = 0.0114   (kappa+mu)/pi= 0.011  pi/2= 0.0005
+('1e-7', '1e-4', '1e-8') c_inf= 1.384700206  c(lambda=log2 10)= 1.384700176  ratio to 2^-16: 90747.7  loss 1-c/2ln2 = 0.00115   (kappa+mu)/pi= 0.0011  pi/2= 5.0e-5
+('1e-9', '1e-5', '1e-10') c_inf= 1.386134801  c(lambda=log2 10)= 1.386134801  ratio to 2^-16: 90841.7  loss 1-c/2ln2 = 0.0001151   (kappa+mu)/pi= 0.00011  pi/2= 5.0e-6
+('1e-3', '2e-2', '1e-4')  memory scale at which state term equals 1% of block cost: M/d^2 = 1.539e-11 ; min d for k>=2,m>=2: 2.0e+4
+('1e-5', '1e-3', '1e-6')  memory scale at which state term equals 1% of block cost: M/d^2 = 7.297e-17 ; min d for k>=2,m>=2: 2.0e+6
+('1e-7', '1e-4', '1e-8')  memory scale at which state term equals 1% of block cost: M/d^2 = 7.222e-22 ; min d for k>=2,m>=2: 2.0e+8
+d=1e+04 lam=10 M=Kacz d(lam+2log d): best finite-d c_eff = 0.0450 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+04 lam=10 M=d^1.5: best finite-d c_eff = 0.0150 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+04 lam=30 M=Kacz d(lam+2log d): best finite-d c_eff = 0.0300 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+04 lam=30 M=d^1.5: best finite-d c_eff = 0.0170 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+06 lam=10 M=Kacz d(lam+2log d): best finite-d c_eff = 0.7230 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+06 lam=10 M=d^1.5: best finite-d c_eff = 0.1500 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+06 lam=30 M=Kacz d(lam+2log d): best finite-d c_eff = 0.6690 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+06 lam=30 M=d^1.5: best finite-d c_eff = 0.1500 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+08 lam=10 M=Kacz d(lam+2log d): best finite-d c_eff = 1.0710 at (0.01, 0.2, 0.01)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+08 lam=10 M=d^1.5: best finite-d c_eff = 0.6000 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+08 lam=30 M=Kacz d(lam+2log d): best finite-d c_eff = 1.0603 at (0.01, 0.2, 0.01)  (2ln2=1.3863; old 2^-16=1.5e-5)
+d=1e+08 lam=30 M=d^1.5: best finite-d c_eff = 0.6020 at (0.03, 0.2, 0.03)  (2ln2=1.3863; old 2^-16=1.5e-5)
